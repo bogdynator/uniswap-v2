@@ -1,1 +1,1 @@
-import "./greeter";
+import "./lp_token.deploy.ts";
