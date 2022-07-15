@@ -2,6 +2,8 @@ pragma solidity >=0.8.15;
 
 import "../v2-core/interfaces/IUniswapV2Pair.sol";
 
+import "hardhat/console.sol";
+
 contract UniswapV2LibraryMock {
     constructor() {}
 
@@ -19,14 +21,18 @@ contract UniswapV2LibraryMock {
         address tokenB
     ) public pure returns (address pair) {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
+        // console.log("LIB");
+        // console.logBytes32(keccak256(abi.encodePacked(token0, token1)));
         pair = address(
-            bytes20(
-                keccak256(
-                    abi.encodePacked(
-                        hex"ff",
-                        factory,
-                        keccak256(abi.encodePacked(token0, token1)),
-                        hex"216ad1f943792c96e42a5aa2284843b66a51c3b4363323642efb83e0345cca46" // init code hash e699c2c70a1e9ca16c58b40782745b5d609738b755845b6ee18a18d21352f753
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            bytes1(0xff),
+                            factory,
+                            keccak256(abi.encodePacked(token0, token1)),
+                            hex"53aaefd46158fdcdd1b4af075d2be4ccb41600aad233595a2f7214e5b2def779" // init code hash e699c2c70a1e9ca16c58b40782745b5d609738b755845b6ee18a18d21352f753
+                        )
                     )
                 )
             )

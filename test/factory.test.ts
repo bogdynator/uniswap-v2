@@ -14,9 +14,9 @@ import {
   UniswapV2LibraryMock__factory,
   UniswapV2Pair,
   UniswapV2Pair__factory,
-} from "../../typechain";
+} from "../typechain";
 
-xdescribe("Pair tests", async () => {
+describe("Pair tests", async () => {
   let ExposedUniswapV2ERC20: ExposedUniswapV2ERC20;
   let UniswapV2Pair: UniswapV2Pair;
   let UniswapV2Factory: UniswapV2Factory;

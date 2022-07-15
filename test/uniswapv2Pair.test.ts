@@ -2,6 +2,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { BigNumber, ContractReceipt } from "ethers";
 import { artifacts, ethers, waffle } from "hardhat";
+import { ByteLengthQueuingStrategy } from "stream/web";
 
 import {
   ExposedUniswapV2ERC20,
@@ -14,7 +15,7 @@ import {
   UniswapV2LibraryMock__factory,
   UniswapV2Pair,
   UniswapV2Pair__factory,
-} from "../../typechain";
+} from "../typechain";
 
 describe("Pair tests", async () => {
   let ExposedUniswapV2ERC20: ExposedUniswapV2ERC20;
@@ -48,20 +49,22 @@ describe("Pair tests", async () => {
       "UniswapV2LibraryMock",
       user,
     )) as UniswapV2LibraryMock__factory;
-    Token1 = await TokenFactory.deploy("Token1", "TK1");
-    Token2 = await TokenFactory.deploy("Token2", "TK2");
   });
 
   beforeEach(async () => {
-    ExposedUniswapV2ERC20 = await ExposedUniswapV2ERC20Factory.deploy();
+    Token1 = await TokenFactory.deploy("Token1", "TK1");
+    Token2 = await TokenFactory.deploy("Token2", "TK2");
+
     UniswapV2Factory = await UniswapV2FactoryFactory.deploy(user.address);
-
     UniswapV2LibraryMock = await UniswapV2LibraryMockFactory.deploy();
+    ExposedUniswapV2ERC20 = await ExposedUniswapV2ERC20Factory.deploy();
 
-    console.log("TOKENS ADDRESS");
-    console.log(Token1.address);
-    console.log(Token2.address);
-    console.log("TOKENS ADDRESS FINAISH");
+    // console.log("Before each");
+    // console.log("Token1: ", Token1.address);
+    // console.log("Token2: ", Token2.address);
+    // console.log("UniswapV2Factory: ", UniswapV2Factory.address);
+    // console.log("UniswapV2Pair: ", UniswapV2Pair.address);
+    // console.log("UniswapV2LibraryMock: ", await UniswapV2LibraryMock.pairFor(UniswapV2Factory.address, Token1.address, Token2.address));
 
     const tx = await UniswapV2Factory.createPair(Token1.address, Token2.address);
     const receipt: ContractReceipt = await tx.wait();
@@ -72,11 +75,15 @@ describe("Pair tests", async () => {
   it("Deploy correctly", async () => {
     expect(await ExposedUniswapV2ERC20.name()).to.be.equal("Uniswap V2");
     expect(await UniswapV2Pair.factory()).to.be.equal(UniswapV2Factory.address);
+    console.log("TEST");
+    console.log("UniswapV2Pair: ", UniswapV2Pair.address);
+    console.log(
+      "UniswapV2LibraryMock: ",
+      await UniswapV2LibraryMock.pairFor(UniswapV2Factory.address, Token1.address, Token2.address),
+    );
   });
 
   it("mint", async () => {
-    console.log("PAIR BY LIBRARY");
-    console.log(await UniswapV2LibraryMock.pairFor(UniswapV2Factory.address, Token1.address, Token2.address));
     let amountToken1 = ethers.utils.parseEther("1");
     let amountToken2 = ethers.utils.parseEther("1");
     await Token1.mint(user.address, amountToken1);
@@ -165,33 +172,23 @@ describe("Pair tests", async () => {
   });
 
   it("swap", async () => {
-    console.log("PAIR BY LIBRARY");
-    console.log(await UniswapV2LibraryMock.pairFor(UniswapV2Factory.address, Token1.address, Token2.address));
-
     let liq = await addLiquidity(Token1, Token2, user, UniswapV2Pair);
     expect(await UniswapV2Pair.balanceOf(user.address)).to.be.equal(liq);
 
-    console.log("DEBUG -1");
     await Token1.mint(bob.address, ethers.utils.parseEther("1"));
-    console.log("DEBUG 0");
     await Token1.connect(bob).transfer(UniswapV2Pair.address, ethers.utils.parseEther("0.2"));
-
-    console.log("DEBUG 1");
 
     let reserveA;
     let reserveB;
-
     [reserveA, reserveB] = await UniswapV2LibraryMock.getReserves(
       UniswapV2Factory.address,
       Token1.address,
       Token2.address,
     );
-    console.log("DEBUG 2");
 
     let amountOut = await UniswapV2LibraryMock.getAmountOut(ethers.utils.parseEther("0.2"), reserveA, reserveB);
-    console.log("DEBUG 3");
 
-    await expect(UniswapV2Pair.connect(bob).swap(BigNumber.from("0"), amountOut, bob.address, ""))
+    await expect(UniswapV2Pair.connect(bob).swap(BigNumber.from("0"), amountOut, bob.address, []))
       .to.emit(UniswapV2Pair, "Swap")
       .withArgs(
         bob.address,
@@ -201,13 +198,6 @@ describe("Pair tests", async () => {
         amountOut,
         bob.address,
       );
-
-    console.log("DEBUG 4");
-  });
-
-  it("PAIR ADDRESS ", async () => {
-    console.log("PAIR BY LIBRARY");
-    console.log(await UniswapV2LibraryMock.pairFor(UniswapV2Factory.address, Token1.address, Token2.address));
   });
 });
 

@@ -103,7 +103,49 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
             )
         );
         address recoveredAddress = ecrecover(digest, v, r, s);
-        require(recoveredAddress != address(0) && recoveredAddress == owner, "UniswapV2: INVALID_SIGNATURE");
+        require(recoveredAddress != address(0), "UniswapV2: INVALID_SIGNATURE");
+        console.log(recoveredAddress);
+        require(recoveredAddress == owner, "UniswapV2: INVALID_SIGNATURE2");
         _approve(owner, spender, value);
+    }
+
+    function permit2(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s,
+        bytes32 hashValue
+    ) external {
+        require(deadline >= block.timestamp, "UniswapV2: EXPIRED");
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline))
+            )
+        );
+        address recoveredAddress = ecrecover(hashValue, v, r, s);
+        require(recoveredAddress != address(0), "UniswapV2: INVALID_SIGNATURE");
+        console.log(recoveredAddress);
+        require(recoveredAddress == owner, "UniswapV2: INVALID_SIGNATURE2");
+        _approve(owner, spender, value);
+    }
+
+    function getDigest(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline
+    ) external view returns (bytes32 digest) {
+        digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner], deadline))
+            )
+        );
     }
 }

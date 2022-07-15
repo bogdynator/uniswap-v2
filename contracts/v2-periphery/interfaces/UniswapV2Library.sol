@@ -1,6 +1,7 @@
 pragma solidity ^0.8.15;
 
 import "../../v2-core/interfaces/IUniswapV2Pair.sol";
+import "hardhat/console.sol";
 
 library UniswapV2Library {
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
@@ -19,13 +20,13 @@ library UniswapV2Library {
         (address token0, address token1) = sortTokens(tokenA, tokenB);
         pair = address(
             uint160(
-                bytes20(
+                uint256(
                     keccak256(
                         abi.encodePacked(
                             hex"ff",
                             factory,
                             keccak256(abi.encodePacked(token0, token1)),
-                            hex"216ad1f943792c96e42a5aa2284843b66a51c3b4363323642efb83e0345cca46" // init code hash
+                            hex"53aaefd46158fdcdd1b4af075d2be4ccb41600aad233595a2f7214e5b2def779" // init code hash
                         )
                     )
                 )
